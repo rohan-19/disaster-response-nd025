@@ -15,6 +15,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV
 import pickle
 
 def load_data(database_filepath):
@@ -46,12 +47,24 @@ def tokenize(text):
 
 
 def build_model():
+
+
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', MultiOutputClassifier(KNeighborsClassifier()))
+        ('clf', MultiOutputClassifier(RandomForestClassifier(n_estimators=50)))
     ])
-    return pipeline
+
+
+    parameters = {
+        'vect__ngram_range': ((1,1),(1, 2)),
+        'vect__max_df': (0.5, 0.75),
+#        'vect__max_features': (None, 5000,10000),
+        'tfidf__use_idf': (True, False)
+    }
+
+    cv = GridSearchCV(pipeline, param_grid=parameters,n_jobs=-1,cv=3)
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
