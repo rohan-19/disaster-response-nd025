@@ -7,7 +7,7 @@ from nltk.tokenize import word_tokenize
 
 from flask import Flask
 from flask import render_template, request, jsonify
-from plotly.graph_objs import Bar
+from plotly.graph_objs import Bar,Pie
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
@@ -42,25 +42,49 @@ def index():
     # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
+
+
+    melted=pd.melt(df, id_vars=['message'], value_vars=['related', 'request', 'offer',
+       'aid_related', 'medical_help', 'medical_products', 'search_and_rescue',
+       'security', 'military', 'child_alone', 'water', 'food', 'shelter',
+       'clothing', 'money', 'missing_people', 'refugees', 'death', 'other_aid',
+       'infrastructure_related', 'transport', 'buildings', 'electricity',
+       'tools', 'hospitals', 'shops', 'aid_centers', 'other_infrastructure',
+       'weather_related', 'floods', 'storm', 'fire', 'earthquake', 'cold',
+       'other_weather', 'direct_report'])
+
+    category_counts=melted.groupby(['variable']).sum().reset_index()
     
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
-                Bar(
-                    x=genre_names,
-                    y=genre_counts
+                Pie(
+                    labels=genre_names,
+                    values=genre_counts
                 )
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
+                'title': 'Distribution of Message Genres'
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=category_counts['variable'],
+                    y=category_counts['value']
+                )
+            ],
+
+            'layout': {
+                'title': 'Count of messages by category',
                 'yaxis': {
                     'title': "Count"
                 },
                 'xaxis': {
-                    'title': "Genre"
+                    'title': "Category"
                 }
             }
         }
