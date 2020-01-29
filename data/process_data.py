@@ -4,12 +4,39 @@ import numpy as np
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    '''
+    INPUT
+    messages_filepath - path to the messages csv
+    categories_filepath - path to the categories csv
+    
+    OUTPUT
+    df - pandas dataframe with messages and their categories merged together
+    
+    This function does the following:
+    1. Read in the messages and categories datasets from csvs
+    2. Merge the two datasets on id and return the resulting dataframe
+    '''
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(categories,on='id',how='left')
     return df
 
 def clean_data(df):
+    '''
+    INPUT
+    df - the messages dataframe to be cleaned 
+    
+    OUTPUT
+    df - pandas dataframe cleaned messages and categories
+    
+    This function does the following:
+    1. Split the categories column into columns for each distinct category
+    2. Add the category names as column headers for the categories datafram
+    3. Change each value to a 1 or 0 in the categories dataframe by removing name prefix
+    4. Change type of category dataframe columns to int
+    5. Append the categories to the original messages dataframe
+    '''
+
     categories = df['categories'].str.split(';',expand=True)
     row = categories.iloc[0]
     category_colnames = row.apply(lambda x: x[:-2].strip())
@@ -30,6 +57,18 @@ def clean_data(df):
     return df
 
 def save_data(df, database_filename):
+    '''
+    INPUT
+    df - pandas dataframe to be written to SQLite
+    database_filename - file path for the SQLite database
+    
+    OUTPUT
+    NONE
+    
+    This function does the following:
+    1. Create sqlite engine at the specified file path
+    2. Store the dataframe in the sqlite database in messages table
+    '''
     engine = create_engine('sqlite:///'+database_filename)
     df.to_sql('messages', engine, index=False)  
 

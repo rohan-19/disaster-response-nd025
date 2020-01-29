@@ -19,6 +19,19 @@ from sklearn.model_selection import GridSearchCV
 import pickle
 
 def load_data(database_filepath):
+    '''
+    INPUT
+    database_filepath - path to the sqlite database 
+    
+    OUTPUT
+    X - numpy ndarray with message texts
+    Y- numpy ndarray with 36 category values for each message
+    category_names - list of 36 category names
+    
+    This function does the following:
+    1. Read the messages data into a pandas dataframe
+    2. Store the message texts as X and target category values as Y
+    '''
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table('messages',engine)
     category_names= ['related', 'request', 'offer',
@@ -34,6 +47,18 @@ def load_data(database_filepath):
     return X,Y,category_names
 
 def tokenize(text):
+    '''
+    INPUT
+    text - text string to be cleaned 
+    
+    OUTPUT
+    clean_tokens - list of cleaned tokens
+    
+    This function does the following:
+    1. Convert the text to all lowercase
+    2. Tokenize text by spliting into tokens by words
+    3. USe the wordnet lemmatizer on each token and add it to a clean token list
+    '''
     text=text.lower()
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
@@ -47,7 +72,17 @@ def tokenize(text):
 
 
 def build_model():
-
+    '''
+    INPUT
+    NONE 
+    
+    OUTPUT
+    cv - Gridsearchcv model on a pipeline testing different parameters
+    
+    This function does the following:
+    1. Create a pipeline with a countvectorizer and TFIDF transformer followed by a multioutput classifier
+    2. Initialize a parameter grid for gridsearchcv
+    '''
 
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
@@ -68,12 +103,37 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    '''
+    INPUT
+    model - the classifier model for the messages
+    X_test - test set of messages
+    Y_test - actual category labels for the test messages
+    category_names - list of 36 category names 
+    
+    OUTPUT
+    NONE
+    
+    This function does the following:
+    1. Use the classifier model to predict category labels for the test messages
+    2. Print the classification report for each of the 36 categories
+    '''
     Y_pred = model.predict(X_test)
     for i in range(len(category_names)):
         print(category_names[i])
         print(classification_report(Y_test.T[i], Y_pred.T[i],labels=[0,1]))
 
 def save_model(model, model_filepath):
+    '''
+    INPUT
+    model - the classifier model for the messages
+    model_filepath - file path to store the classifier model as pickle
+    
+    OUTPUT
+    NONE
+    
+    This function does the following:
+    1. Store the classifier model as a pickle object at the specified file path
+    '''
     with open(model_filepath, 'wb') as file:
         pickle.dump(model, file)
 
